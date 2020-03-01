@@ -50,19 +50,7 @@ namespace kNNRegression
             int N = 0;
             List<Point> wrongFound = new List<Point>();
 
-            foreach (var p in samples)
-            {
-                if (p.Type == 0)
-                {
-                    P += 1;
-                }
-                else
-                {
-                    N += 1;
-                }
-            }
-
-            Console.WriteLine("s");
+            double x1 = 0, x2 = 0, x3 = 0, y1 = 0, y2 = 0, y3 = 0, z1 = 0, z2 = 0, z3 = 0;
             
             for (int i = 0; i < testSamples.Count; i++)
             {
@@ -76,63 +64,64 @@ namespace kNNRegression
                     
                     /** Classifier **/
                     
-                    if (classifier.SimpleClassifyWithKernel() != p.Type)
+                    //int classified = classifier.SimpleClassifyWithKernel();
+                    int classified = classifier.ClassifyWithParzenWindowAndKernel();  //0.913
+                    //int classified = classifier.ClassifyWithParzenWindow();
+                    //int classified = classifier.ClassifyWithDistanceWeights();
+                    //int classified = classifier.SimpleClassification();  //0.56
+                    
+                    if (classified != p.Type)
                     {
                         // chose classification
-                        if (p.Type == 0)
+                        if (p.Type == 1)    
                         {
-                            FN += 1;
+                            if (classified == 2)
+                            {
+                                y1 += 1;
+                            }
+                            else
+                            {
+                                z1 += 1;
+                            }
+                        }
+                        else if (p.Type == 2)
+                        {
+                            if (classified == 1)
+                            {
+                                x2 += 1;
+                            }
+                            else
+                            {
+                                z2 += 1;
+                            }
                         }
                         else
                         {
-                            FP += 1;
+                            if (classified == 1)
+                            {
+                                x3 += 1;
+                            }
+                            else
+                            {
+                                y3 += 1;
+                            }
                         }
 
                         wrongFound.Add(p);
                     }
                     else
                     {
-                        if (p.Type == 0)
+                        switch (p.Type)
                         {
-                            TN += 1;
-                        }
-                        else
-                        {
-                            TP += 1;
-                        }
-                    }
-                }
-
-
-                foreach (var p in testSample)
-                {
-                    List<Point> hate = new List<Point>(trainingSample);
-                    Classifier classifier = new Classifier(hate, p, 3); // chose k
-                    
-                    /** Classification **/
-                    
-                    if (classifier.SimpleClassifyWithKernel() != p.Type)
-                    {
-                        if (p.Type == 0)
-                        {
-                            FN += 1;
-                        }
-                        else if (p.Type == 1)
-                        {
-                            FP += 1;
-                        }
-
-                        wrongFound.Add(p);
-                    }
-                    else
-                    {
-                        if (p.Type == 0)
-                        {
-                            TN += 1;
-                        }
-                        else
-                        {
-                            TP += 1;
+                            case 1:
+                                x1 += 1;
+                                break;
+                            case 2:
+                                y2 += 1;
+                                break;
+                            case 3:
+                                z3 += 1;
+                                break;
                         }
                     }
                 }
@@ -142,23 +131,29 @@ namespace kNNRegression
             plot1.start(this.samples, new ArrayList<>());
             Plot plot = new Plot(this.samples, wrongFound);
             plot.start(this.samples, wrongFound);*/
+
+            double prec1 = x1 / (x1 + y1 + z1);
+            double rec1 = x1 / (x1 + x2 + x3);
+
+            double prec2 = y2 / (x2 + y2 + z2);
+            double rec2 = y2 / (y1 + y2 + y3);
+
+            double prec3 = z3 / (x3 + y3 + z3);
+            double rec3 = z3 / (z1 + z2 + z3);
             
-            double prec = (double) TP / (TP + FP);
-            double rec = (double) TP / P;
-            double f1 = 2 * (prec * rec) / (prec + rec);
-
-            double prec2 = (double) FP / (TP + FP);
-            double rec2 = (double) FP / N;
+            double f1 = 2 * (prec1 * rec1) / (prec1 + rec1);
             double f2 = 2 * (prec2 * rec2) / (prec2 + rec2);
+            double f3 = 2 * (prec3 * rec3) / (prec3 + rec3);
 
-            Console.WriteLine("TP: " + TP);
-            Console.WriteLine("FP: " + FP);
-            Console.WriteLine("TN: " + TN);
-            Console.WriteLine("FN: " + FN);
+            double Fm = (f1 + f2 + f3) / 3;
+
+
             Console.WriteLine("f1 for 1: " + f1);
             Console.WriteLine("f2 for 2: " + f2);
+            Console.WriteLine("f3 for 3: " + f3);
+            Console.WriteLine("f-macro:" + Fm);
             
-            return f1;
+            return Fm;
         }
     }
 }

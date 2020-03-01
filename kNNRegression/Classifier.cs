@@ -44,7 +44,7 @@ namespace kNNRegression
         }
         
         /** Classification **/
-        public double SimpleClassification()
+        public int SimpleClassification()
         {
             var nearest = FindKNearest();
             int one = 0;
